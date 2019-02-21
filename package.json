@@ -1,0 +1,24 @@
+{
+  "name": "express-api-locker",
+  "version": "1.0.0",
+  "description": "Lock API when a request arrives and fail other requests on same API with same payload thereby restricting duplicate requests",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "keywords": [
+    "expressjs",
+    "redis",
+    "redis-lock",
+    "express-lock",
+    "express-middleware",
+    "http",
+    "duplicate",
+    "API"
+  ],
+  "author": "Aziz Tinwala",
+  "license": "MIT",
+  "dependencies": {
+    "on-headers": "^1.0.1"
+  }
+}

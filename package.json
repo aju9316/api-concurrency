@@ -19,6 +19,6 @@
   "author": "Aziz Tinwala",
   "license": "MIT",
   "dependencies": {
-    "on-headers": "^1.0.1"
+    "on-finished": "^2.3.0"
   }
 }

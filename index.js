@@ -14,7 +14,7 @@
 module.exports = ApiLock;
 
 var crypto = require('crypto')
-var onHeaders = require('on-headers')
+var onFinished = require('on-finished')
 
 var DEFAULTS = {
   ttl: 60000, // one minute in milliseconds
@@ -77,7 +77,7 @@ function ApiLock(redisClient, options) {
       }
     })
   
-    onHeaders(res, function() {
+    onFinished(res, function() {
       if (!!res.isFirstRequest) {
         redisClient.expire(hash, 0)
       }

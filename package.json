@@ -1,7 +1,10 @@
 {
   "name": "express-api-locker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Lock API when a request arrives and fail other requests on same API with same payload thereby restricting duplicate requests",
+  "contributors": [
+    "Aziz Tinwala <aju9316@gmail.com>"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "npm test"
@@ -13,12 +16,16 @@
     "express-lock",
     "express-middleware",
     "http",
-    "duplicate",
-    "API"
+    "duplicate request",
+    "Concurrency"
   ],
   "author": "Aziz Tinwala",
   "license": "MIT",
   "dependencies": {
     "on-finished": "^2.3.0"
-  }
+  },
+  "engines": {
+    "node": ">= 0.10"
+  },
+  "repository": "https://github.com/aju9316/express-api-locker"
 }

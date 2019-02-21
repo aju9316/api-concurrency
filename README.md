@@ -31,7 +31,7 @@ app.listen(3000, function() {
 ```
 
 ## Options
-key | datatype | description
+key | data type | description
 ------------ | ------------ | -------------
 ttl | number (default: 60000) | value (in millisecond) to expire the hashkey regardless of response was sent or not
 silent | boolean (default: false) | if true, it will block the API execution in case of redis error

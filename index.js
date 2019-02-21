@@ -66,13 +66,11 @@ function ApiLock(redisClient, options) {
       else {
         redisClient.set(hash, 'LOCKED', 'PX', self.ttl, function(setKeyError, setKeyReply) {
           if(setKeyError) {
-            return next(self.throwError(setKeyError))
+            return next(self.throwError(setKeyError));
           }
           if(setKeyReply === 'OK') {
             res.isFirstRequest = true
-            setTimeout(() => {
-              return next()
-            }, 10000);
+            return next();
           }
           else return next(self.throwError('No response from redis while setting the lock for ' + hash));
         });

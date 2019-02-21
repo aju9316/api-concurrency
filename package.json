@@ -1,6 +1,6 @@
 {
   "name": "express-api-locker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lock API when a request arrives and fail other requests on same API with same payload thereby restricting duplicate requests",
   "main": "index.js",
   "scripts": {

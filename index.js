@@ -4,14 +4,14 @@
  * MIT Licensed
  */
 
-'use strict';
+'use strict'
 
 /**
  * Module exports.
  * @public
  */
 
-module.exports = ApiLock;
+module.exports = ApiLock
 
 var crypto = require('crypto')
 var onFinished = require('on-finished')
@@ -30,57 +30,52 @@ var defaults = {
  * @returns {Function} express middleware function
  * @public
  */
-function ApiLock(redisClient, options) {
-  options         = options || {};
-  var self        = this || {};
-  self.TTL        = typeof options.ttl === 'number' ? options.ttl : defaults.TTL;
-  self.SILENT     = options.silent === true ? true : defaults.SILENT;
-  self.KEY_PREFIX = options.key_prefix || defaults.KEY_PREFIX;
-
-  self.validateRedis(redisClient);
+function ApiLock (redisClient, options) {
+  options = options || {}
+  var self = this || {}
+  self.TTL = typeof options.ttl === 'number' ? options.ttl : defaults.TTL
+  self.SILENT = options.silent === true ? true : defaults.SILENT
+  self.KEY_PREFIX = options.key_prefix || defaults.KEY_PREFIX
+  
+  validateRedis(redisClient) // intentionally left this function as synchronous
 
   /**
    * @description Express middleware function to convert api endpoint and request body into MD5 hash. This MD5 hash will be stored in redis as a key
    * @param {Object} req Express request object
    * @param {Object} res Express response object
    * @param {Function} next Express next method to invoke the next middleware in line
-   * @returns {Function} Can throw an error in case same API is already being processed and it;s MD5 hashkey is already present in redis
+   * @returns {Function} Can throw an error in case same API is already being processed and its MD5 hashkey is already present in redis
    */
   return function lock (req, res, next) {
-    var reqObject = { 
+    var reqObject = {
       api: req.path,
       body: req.body,
       ip: req.connection.remoteAddress
-    };
-    
-    var hash = crypto.createHash('md5').update(JSON.stringify(reqObject)).digest("hex");
-    hash     = self.KEY_PREFIX + '-' + hash;
-  
-    redisClient.get(hash, function(getKeyError, getKeyReply) {
-      if(getKeyError) {
-        return next(self.throwError(getKeyError))
+    }
+    var hash = crypto.createHash('md5').update(JSON.stringify(reqObject)).digest('hex')
+    hash = self.KEY_PREFIX + '-' + hash
+    redisClient.get(hash, function (getKeyError, getKeyReply) {
+      if (getKeyError) {
+        return next(throwError(self.SILENT, getKeyError))
       }
-      if(getKeyReply === 'LOCKED') {
-        res.isFirstRequest = false;
-        res.status(200);
+      if (getKeyReply === 'LOCKED') {
+        res.isFirstRequest = false
+        res.status(200)
         return next(defaults.ERROR_MESSAGE)
-      }
-      else {
-        redisClient.set(hash, 'LOCKED', 'PX', self.TTL, function(setKeyError, setKeyReply) {
-          if(setKeyError) {
-            return next(self.throwError(setKeyError));
+      } else {
+        redisClient.set(hash, 'LOCKED', 'PX', self.TTL, function (setKeyError, setKeyReply) {
+          if (setKeyError) {
+            return next(throwError(self.SILENT, setKeyError))
           }
-          if(setKeyReply === 'OK') {
-            res.isFirstRequest = true;
-            return next();
-          }
-          else return next(self.throwError('No response from redis while setting the lock for ' + hash));
-        });
+          if (setKeyReply === 'OK') {
+            res.isFirstRequest = true
+            return next()
+          } else return next(throwError(self.SILENT, 'No response from redis while setting the lock for ' + hash))
+        })
       }
     })
-  
-    onFinished(res, function() {
-      if (!!res.isFirstRequest) {
+    onFinished(res, function () {
+      if (res.isFirstRequest) {
         redisClient.expire(hash, 0)
       }
     })
@@ -93,9 +88,9 @@ function ApiLock(redisClient, options) {
  * @returns Will return 'null' in case of silent error
  * @private
  */
-ApiLock.prototype.throwError = function(error) {
-  if(this.SILENT) return null;
-  else throw new Error(error);
+function throwError (silent, error) {
+  if (silent) return null
+  else throw new Error(error)
 }
 
 /**
@@ -104,15 +99,20 @@ ApiLock.prototype.throwError = function(error) {
  * @returns Will throw an error if redis client object is not valid or connection to redis to not established
  * @private
  */
-ApiLock.prototype.validateRedis = function(redisClient) {
-  if(!redisClient && typeof redisClient.ping !== 'function') 
-    throw new Error('First argument should be a valid redis client object');
+function validateRedis (redisClient) {
+  if (!redisClient) {
+    throw new Error('Argument redisClient is required')
+  }
+  if (redisClient && typeof redisClient.ping !== 'function') {
+    throw new Error('First argument should be a valid redis client object')
+  }
 
   /** We try to ping redis to test the connection
    *  If not able to connect, we throw an error (silent flag is ignored intentionally in this case)
-   **/ 
-  redisClient.ping(function(err, reply) {
-    if(err || reply !== 'PONG') 
-      throw new Error('Redis connection error');
-  });
+   **/
+  redisClient.ping(function (err, reply) {
+    if (err || reply !== 'PONG') {
+      throw new Error('Redis connection error')
+    }
+  })
 }

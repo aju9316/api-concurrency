@@ -1,7 +1,13 @@
+[![JavaScript Style Guide](https://cdn.rawgit.com/standard/standard/master/badge.svg)](https://github.com/standard/standard)
+
 # express-api-locker
 Express.js Middleware to restrict duplicate requests for express.js.
 
 If an API request arrives for the very first time it will lock it ([using redis](https://redis.io/topics/quickstart)) and another request for same API with same request body arrive even before the response of previous API is sent, it will return an error in response for that second (duplicate) request
+
+Important: Since this middleware relies on `req.body` to determine a duplicate request, always initialize this middleware after the request body has been parsed
+
+Tip: To increase the throughput of this middleware, connect the redis client with redis server using unix sockets
 
 
 # Installation
@@ -35,3 +41,4 @@ key | data type | description
 ------------ | ------------ | -------------
 ttl | number (default: 60000) | value (in millisecond) to expire the hashkey regardless of response was sent or not
 silent | boolean (default: false) | if true, it will block the API execution in case of redis error
+key_prefix | string (default: 'ApiLock') | this string will be appended as prefix to the key name in redis

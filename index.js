@@ -49,8 +49,7 @@ function ApiLock (redisClient, options) {
   return function lock (req, res, next) {
     var reqObject = {
       api: req.path,
-      body: req.body,
-      ip: req.connection.remoteAddress
+      body: req.body
     }
     var hash = crypto.createHash('md5').update(JSON.stringify(reqObject)).digest('hex')
     hash = self.KEY_PREFIX + '-' + hash

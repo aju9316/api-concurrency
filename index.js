@@ -1,5 +1,5 @@
 /*!
- * express-api-locker
+ * api-concurrency
  * Copyright(c) 2019 Aziz Tinwala
  * MIT Licensed
  */
@@ -20,65 +20,61 @@ var defaults = {
   TTL: 60000, // one minute in milliseconds
   SILENT: false, // by default, throw error if we encounter redis related error
   ERROR_MESSAGE: 'Resource is busy',
-  KEY_PREFIX: 'ApiLock'
+  KEY_PREFIX: 'ApiLock-'
 }
 
 /**
  * @description Initialize user preferred options and defaults
  * @param {Object} redisClient object which will be used to set and get keys from redis
  * @param {Object} options object which contains user preferred options (for e.g. TTL for the key to remain valid in redis)
- * @returns {Function} express middleware function
+ * @param {Object} res HTTP response object
+ * @param {Function} next next callback to invoke the next middleware in line
+ * @returns {Function} Can throw an error in case same API is already being processed and its MD5 hashkey is already present in redis
  * @public
  */
-function ApiLock (redisClient, options) {
+function ApiLock (redisClient, options, res, next) {
   options = options || {}
   var self = this || {}
   self.TTL = typeof options.ttl === 'number' ? options.ttl : defaults.TTL
   self.SILENT = options.silent === true ? true : defaults.SILENT
   self.KEY_PREFIX = options.key_prefix || defaults.KEY_PREFIX
+  self.ERROR_MESSAGE = options.error_message || defaults.ERROR_MESSAGE
   
   validateRedis(redisClient) // intentionally left this function as synchronous
 
-  /**
-   * @description Express middleware function to convert api endpoint and request body into MD5 hash. This MD5 hash will be stored in redis as a key
-   * @param {Object} req Express request object
-   * @param {Object} res Express response object
-   * @param {Function} next Express next method to invoke the next middleware in line
-   * @returns {Function} Can throw an error in case same API is already being processed and its MD5 hashkey is already present in redis
-   */
-  return function lock (req, res, next) {
-    var reqObject = {
-      api: req.path,
-      body: req.body
-    }
-    var hash = crypto.createHash('md5').update(JSON.stringify(reqObject)).digest('hex')
-    hash = self.KEY_PREFIX + '-' + hash
-    redisClient.get(hash, function (getKeyError, getKeyReply) {
-      if (getKeyError) {
-        return next(throwError(self.SILENT, getKeyError))
-      }
-      if (getKeyReply === 'LOCKED') {
-        res.isFirstRequest = false
-        res.status(200)
-        return next(defaults.ERROR_MESSAGE)
-      } else {
-        redisClient.set(hash, 'LOCKED', 'PX', self.TTL, function (setKeyError, setKeyReply) {
-          if (setKeyError) {
-            return next(throwError(self.SILENT, setKeyError))
-          }
-          if (setKeyReply === 'OK') {
-            res.isFirstRequest = true
-            return next()
-          } else return next(throwError(self.SILENT, 'No response from redis while setting the lock for ' + hash))
-        })
-      }
-    })
-    onFinished(res, function () {
-      if (res.isFirstRequest) {
-        redisClient.expire(hash, 0)
-      }
-    })
+  if(!options.payload) {
+    throw new Error('Payload cannot be empty')
   }
+
+  var hash = crypto.createHash('md5').update(JSON.stringify(options.payload)).digest('hex')
+  hash = self.KEY_PREFIX + hash
+  redisClient.get(hash, function (getKeyError, getKeyReply) {
+    if (getKeyError) {
+      return next(throwError(self.SILENT, getKeyError))
+    }
+    if (getKeyReply === 'LOCKED') {
+      res.isFirstRequest = false
+      res.status(200)
+      return next(self.ERROR_MESSAGE)
+    } else {
+      redisClient.set(hash, 'LOCKED', 'PX', self.TTL, function (setKeyError, setKeyReply) {
+        if (setKeyError) {
+          return next(throwError(self.SILENT, setKeyError))
+        }
+        if (setKeyReply === 'OK') {
+          res.isFirstRequest = true
+          return next()
+        } else {
+          return next(throwError(self.SILENT, 'No response from redis while setting the lock for ' + hash))
+        }
+      })
+    }
+  })
+  onFinished(res, function () {
+    if (res.isFirstRequest) {
+      redisClient.expire(hash, 0)
+    }
+  })
 }
 
 /**

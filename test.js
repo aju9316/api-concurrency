@@ -23,14 +23,23 @@ describe('ApiLock', function () {
     }
   })
 
-  it('should return a middleware function', function () {
+  it('should throw error if payload is not passed in options', function () {
     try {
-      var middleware = ApiLock(redisclient)
-      assert.strictEqual(typeof middleware, typeof 'function');
+      ApiLock(redisclient)
+    }
+    catch(error) {
+      assert.strictEqual(error.message, 'Payload cannot be empty')
+    }
+  })
+
+  it('should execute the function without errors', function () {
+    try {
+      var options = { payload: { path: '/api/v1/user', body: { userID: 123, user_name: 'jon doe' } } }
+      ApiLock(redisclient, options, {}, function () {})
+      ApiLock(redisclient, options, {}, function () {})
     }
     catch(error) {
       console.log(error)
-      // assert.strictEqual(error.message, 'First argument should be a valid redis client object')
     }
   })
 })

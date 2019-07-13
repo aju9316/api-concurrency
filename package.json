@@ -1,6 +1,6 @@
 {
   "name": "api-concurrency",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Lock API when a request arrives and fail other requests on same API with same payload thereby restricting duplicate requests",
   "contributors": [
     "Aziz Tinwala <aju9316@gmail.com>"

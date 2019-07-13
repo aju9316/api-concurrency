@@ -32,7 +32,6 @@ app.use(function (req, res, next) {
     
     /*
      * Following function will invoke the next middleware with or without error depending on weather a request is duplicate or not.
-     * This function will NOT return the response directly.
      **/
     apiLock(redisClient, options, res, next)
 })
@@ -56,4 +55,5 @@ key | data type | description
 payload | string/number/object/array (mandatory) | this value will be used to determine if a given request if duplicate or not
 ttl | number (optional, default: 60000) | value (in millisecond) to expire the hashkey regardless of response was sent or not
 silent | boolean (optional, default: false) | if true, it will block the API execution in case of redis error
-key_prefix | string (optional, default: 'ApiLock') | this string will be appended as prefix to the key name in redis
+key_prefix | string (optional, default: 'ApiLock') | this string will be added as prefix to the key name in redis
+error_message | string (optional, default: 'Resource is busy') | this string will contain the error message which the function will pass to next middleware in case of duplicate request

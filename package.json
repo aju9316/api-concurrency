@@ -1,6 +1,6 @@
 {
   "name": "express-api-locker",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Lock API when a request arrives and fail other requests on same API with same payload thereby restricting duplicate requests",
   "contributors": [
     "Aziz Tinwala <aju9316@gmail.com>"
